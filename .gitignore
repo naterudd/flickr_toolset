@@ -1,0 +1,11 @@
+# ignore personalized files
+config.php
+run.sh
+
+# ignore other libraries
+getid3/
+phpFlickr/
+
+# ignore other files
+*.DS_Store
+
