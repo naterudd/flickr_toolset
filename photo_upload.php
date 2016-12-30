@@ -142,7 +142,7 @@ foreach ($files as $file) {
 	
 		// MARK -- Add to the set
 		$set_id="";
-		foreach($all_sets['photoset'] as $set) { if ($set['title']==date('ym',$date)) { 
+		foreach($all_sets['photoset'] as $set) { if ($set['title']['_content']==date('ym',$date)) { 
 			// does the set exist
 			$set_id=$set['id']; break;
 		}}

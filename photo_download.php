@@ -24,6 +24,7 @@
 ini_set("memory_limit", "256M");
 require_once("config.php");
 require_once("phpFlickr/phpFlickr.php");
+require_once("getid3/getid3.php");
 
 $f = new phpFlickr($api_key, $api_secret);
 $f->setToken($my_token);
@@ -37,7 +38,7 @@ $all_sets=$f->photosets_getList($my_nsid);
 foreach ($all_sets['photoset'] as $set) { 
 
 // Temorarily limit to only sets that are being processed
-if (substr($set['title'],0,2)=="20") {
+if (substr($set['title']['_content'],0,2)=="20") {
 
 	$files_in_flickr=array();
 	$page_increment=0;
@@ -47,7 +48,7 @@ if (substr($set['title'],0,2)=="20") {
 
 		$photos = $f->photosets_getPhotos($set['id'],"original_format,url_o,media,date_taken,geo",NULL,NULL,$page_increment);
 		$set_path = "{$photos['photoset']['title']}/";
-		echo $set['title']."\n";
+		echo $set['title']['_content']."\n";
 		
 		// Is the folder missing for the set
 		if (!is_dir($photo_download_base_path.$set_path)) {
@@ -144,7 +145,7 @@ if (substr($set['title'],0,2)=="20") {
 				$photo_sets=array();
 				$sets=$f->photos_getAllContexts($photo['id']);
 				if (count($sets['set'])>1) { foreach ( $sets['set'] as $s ) {
-					$photo_sets[]=$s['title'];
+					$photo_sets[]=$s['title']['_content'];
 				}}
 				//  Create code for deletion (log as bad date)				
 				$log['mismatchdate'][]=array($file_path,$photo_sets);
@@ -181,7 +182,7 @@ if (substr($set['title'],0,2)=="20") {
 				$photo_sets=array();
 				$sets=$f->photos_getAllContexts($photo['id']);
 				if (count($sets['set'])>1) { foreach ( $sets['set'] as $s ) {
-					$photo_sets[]=$s['title'];
+					$photo_sets[]=$s['title']['_content'];
 				}}
 				//  Create code for deletion (log as bad geo)
 				$log['mismatchgeo'][]=array($file_path,$photo_sets);
@@ -211,7 +212,7 @@ if (substr($set['title'],0,2)=="20") {
 	// Does the count of photos in the set not match the count of valid files in the folder
 	if (count($files_in_flickr)!=count($files_in_folder)) {
 		// Log the set as an error
-		$log['mismatchcount'][]=array("id"=>$set['id'],"desc"=>$set['title']." - ".count($files_in_flickr)." in flickr, ".count($files_in_folder)." in the folder");
+		$log['mismatchcount'][]=array("id"=>$set['id'],"desc"=>$set['title']['_content']." - ".count($files_in_flickr)." in flickr, ".count($files_in_folder)." in the folder");
 	}
 	
 	$sets_in_flickr[]=substr($photo_download_base_path.$set_path,0,-1);
