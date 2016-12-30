@@ -33,19 +33,20 @@ if ($all_sets===false) {
 	$rc = mail($desktop_download_email_to, "Desktop download error", print_r($f,true), implode("\r\n", $headers) );
 }
 if (count($all_sets['photoset'])) { foreach ($all_sets['photoset'] as $set) { 
-	if (preg_match($desktop_download_search_expression,$set['title'])) {
-		$photos = $f->photosets_getPhotos($set['id'],"url_o,media,rotation",null,"photos");
+	if (preg_match($desktop_download_search_expression,$set['title']['_content'])) {
+		$photos = $f->photosets_getPhotos($set['id'],"url_o,media,rotation,date_taken",null,"photos");
 		foreach ($photos['photoset']['photo'] as $photo) {
+			$file_name=date("Ymd_His_",strtotime($photo['datetaken'])).$photo['title'].".".pathinfo($photo['url_o'],PATHINFO_EXTENSION);
 			if($photo['media']=="photo"&&
-			   !file_exists($desktop_download_path_both.pathinfo($photo['url_o'],PATHINFO_BASENAME))&&
-			   !file_exists($desktop_download_path_omit.pathinfo($photo['url_o'],PATHINFO_BASENAME))
+			   !file_exists($desktop_download_path_both.$file_name)&&
+			   !file_exists($desktop_download_path_omit.$file_name)
 			) {
 				if ($photo['width_o']>$photo['height_o']&&($photo['rotation']==0||$photo['rotation']==180)) {
-					echo $desktop_download_path_horiz.pathinfo($photo['url_o'],PATHINFO_BASENAME)."\n";
-					file_put_contents($desktop_download_path_horiz.pathinfo($photo['url_o'],PATHINFO_BASENAME),file_get_contents($photo['url_o']));
+					echo $desktop_download_path_horiz.$file_name."\n";
+					file_put_contents($desktop_download_path_horiz.$file_name,file_get_contents($photo['url_o']));
 				}
-				echo $desktop_download_path_both.pathinfo($photo['url_o'],PATHINFO_BASENAME)."\n";
-				file_put_contents($desktop_download_path_both.pathinfo($photo['url_o'],PATHINFO_BASENAME),file_get_contents($photo['url_o']));
+				echo $desktop_download_path_both.$file_name."\n";
+				file_put_contents($desktop_download_path_both.$file_name,file_get_contents($photo['url_o']));
 			}
 		}
 	}
