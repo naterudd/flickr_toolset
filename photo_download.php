@@ -26,6 +26,13 @@ require_once("config.php");
 require_once("phpFlickr/phpFlickr.php");
 require_once("getid3/getid3.php");
 
+// Check the necessary regular expression pattern
+$result=@preg_match($photo_download_search_expression,"check");
+if ($result===false) {
+	echo "ERROR: The \$photo_download_search_expression in config.php is not a vaild regular expression pattern.\nA simple definition of the following will match all flickr albums.\n\$photo_download_search_expression='/.*/';\n";
+	exit;
+}
+
 $f = new phpFlickr($api_key, $api_secret);
 $f->setToken($my_token);
 
@@ -37,8 +44,8 @@ $all_sets=$f->photosets_getList($my_nsid);
 // Foreach set
 foreach ($all_sets['photoset'] as $set) { 
 
-// Temorarily limit to only sets that are being processed
-if (substr($set['title']['_content'],0,2)=="20") {
+// Limit to only sets that are desired (default matches all sets)
+if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 
 	$files_in_flickr=array();
 	$page_increment=0;
@@ -99,12 +106,29 @@ if (substr($set['title']['_content'],0,2)=="20") {
 			$flickr_longitude=(float)$photo['longitude'];	
 	
 			// Make new file name
-			$file_name=date("Ymd_His_",$flickr_date).$flickr_title.".".pathinfo($flickr_filename,PATHINFO_EXTENSION);
+			$flickr_extension=pathinfo($flickr_filename,PATHINFO_EXTENSION);
+			$file_prename=date("Ymd_His_",$flickr_date).$flickr_title;
+			$file_name=$file_prename.".".$flickr_extension;
 			$file_path=$photo_download_base_path.$set_path.$file_name;
-			echo "  ".$file_name."\n";
 	 
 			// Does the photo not exist in the folder
-			if (file_exists($file_path)===false) {
+			$exists=false;
+			if (file_exists($file_path)) {
+				$exists=true;
+			}
+			if (key_exists($flickr_extension, $photo_download_acceptable_extension_replacements)) { if (count($photo_download_acceptable_extension_replacements[$flickr_extension])) {
+				foreach ($photo_download_acceptable_extension_replacements[$flickr_extension] as $acceptable_extension) {
+					if (file_exists($photo_download_base_path.$set_path.$file_prename.".".$acceptable_extension)) {
+						$exists=true;
+						$file_path=$photo_download_base_path.$set_path.$file_prename.".".$acceptable_extension;
+						$file_name=$file_prename.".".$acceptable_extension;
+					}				
+				}
+			}}
+			echo "  ".$file_name."\n";
+
+			// If the file wasn't available
+			if ($exists===false) {
 				//  Download file
 				echo "    Need to download.\n";
 				

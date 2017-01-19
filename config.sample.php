@@ -23,6 +23,11 @@ $desktop_download_email_to=str_replace("@", "+desktops@", $email_address); // or
 
 // MARK Photo download settings
 $photo_download_base_path = "download/photos/";
+$photo_download_search_expression="/.*/";
+
+$photo_download_acceptable_extension_replacements=array(
+	"mp4"=>array("mov") //a file on disk with an mov extension can stand in for a flickr file with an mp4 extension
+);
 
 $photo_download_email_from=str_replace("@", "+downloader@", $email_address); // or a specific address "downloader@doamin.com";
 $photo_download_email_to=str_replace("@", "+downloader@", $email_address); // or a specific address "myaddress@doamin.com";, or the above variable $email_address;

@@ -24,6 +24,13 @@
 require_once("config.php");
 require_once("phpFlickr/phpFlickr.php");
 
+// Check the necessary regular expression pattern
+$result=@preg_match($desktop_download_search_expression,"check");
+if ($result===false) {
+	echo "ERROR: The \$desktop_download_search_expression in config.php is not a vaild regular expression pattern.\nA simple definition of the following will match any flickr albums beginning with 'Desktops'.\n\$desktop_download_search_expression='/^Desktops/';\n";
+	exit;
+}
+
 $f = new phpFlickr($api_key, $api_secret);
 $f->setToken($my_token);
 
