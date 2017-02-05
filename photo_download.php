@@ -70,8 +70,9 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 		
 			// Get current file name
 			$url_original="";
-			$flickr_filename=pathinfo($photo['url_o'],PATHINFO_BASENAME);
+			$flickr_filename=$photo['title'].".missing";
 			if ($photo['media']=="photo") {
+				$flickr_filename=pathinfo($photo['url_o'],PATHINFO_BASENAME);
 				$url_original=$photo['url_o'];
 				$headers = get_headers($url_original,1);
 			} else if ($photo['media']=="video") {
@@ -147,75 +148,84 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 				fclose($file_pointer);
 				chmod($file_path,0777);
 			}
-	
-			// Does the file not register as a photo or video
-			$type=mime_content_type($file_path);
-			if (strstr($type,"video/")===false&&strstr($type,"image/")===false) {
-				//  Create code for deletion (log as invalid file)
-				$log["invalid"][]=$file_path;
-				//  Continue, skipping below
-				continue;
-			}
-	
-			// Get exif date taken
-			$getID3 = new getID3;
-			$info=$getID3->analyze($file_path);
-			if ($info['fileformat']=='mp4'&&isset($info['tags']['quicktime']['creation_date'][0])) {
-				$file_date=strtotime($info['tags']['quicktime']['creation_date'][0]);
-			} elseif ($info['fileformat']=='jpg'&&isset($info['jpg']['exif']['EXIF']['DateTimeOriginal'])) {
-				$file_date=strtotime($info['jpg']['exif']['EXIF']['DateTimeOriginal']);
-			} else {
-				// No date found in the file, set to the flickr date
-				$file_date=$flickr_date;
-			}
-	
-			// Does exif date not match Flickr date taken
-			if ($file_date!=$flickr_date) {
-				//  Check the number of sets this photo is include
-				$photo_sets=array();
-				$sets=$f->photos_getAllContexts($photo['id']);
-				if (count($sets['set'])>1) { foreach ( $sets['set'] as $s ) {
-					$photo_sets[]=$s['title']['_content'];
-				}}
-				//  Create code for deletion (log as bad date)				
-				$log['mismatchdate'][]=array($file_path,$photo_sets);
-			}
+			
+			// Only perform the following checks if the file is on the disk
+			if (file_exists($file_path)) {
 
-			// Change file creation to match exif date taken
-			exec("SetFile -d '".date('m/d/Y H:i:s',$file_date)."' ".escapeshellarg($file_path));
+				// Does the file not register as a photo or video
+				$type=mime_content_type($file_path);
+				if (strstr($type,"video/")===false&&strstr($type,"image/")===false) {
+					//  Create code for deletion (log as invalid file)
+					$log["invalid"][]=$file_path;
+					
+					// Save file path to files_in_flickr array
+					$files_in_flickr[]=$file_path;	
+					
+					//  Continue, skipping below
+					continue;
+				}
 	
-			// Change file modification to match exif date taken
-			touch($file_path,$file_date); // touch -t
+				// Get exif date taken
+				$getID3 = new getID3;
+				$info=$getID3->analyze($file_path);
+				if ($info['fileformat']=='mp4'&&isset($info['tags']['quicktime']['creation_date'][0])) {
+					$file_date=strtotime($info['tags']['quicktime']['creation_date'][0]);
+				} elseif ($info['fileformat']=='jpg'&&isset($info['jpg']['exif']['EXIF']['DateTimeOriginal'])) {
+					$file_date=strtotime($info['jpg']['exif']['EXIF']['DateTimeOriginal']);
+				} else {
+					// No date found in the file, set to the flickr date
+					$file_date=$flickr_date;
+				}
 	
-			// Get exif geo
-			if ($info['fileformat']=='mp4'&&isset($info['tags']['quicktime']['gps_latitude'][0])) {
-				$file_latitude=(float)$info['tags']['quicktime']['gps_latitude'][0];
-			} elseif ($info['fileformat']=='jpg'&&isset($info['jpg']['exif']['GPS']['computed']['latitude'])) {
-				$file_latitude=(float)$info['jpg']['exif']['GPS']['computed']['latitude'];
-			} else {
-				$file_latitude="";
-			}
+				// Does exif date not match Flickr date taken
+				if ($file_date!=$flickr_date) {
+					//  Check the number of sets this photo is include
+					$photo_sets=array();
+					$sets=$f->photos_getAllContexts($photo['id']);
+					if (count($sets['set'])>1) { foreach ( $sets['set'] as $s ) {
+						$photo_sets[]=$s['title']['_content'];
+					}}
+					//  Create code for deletion (log as bad date)				
+					$log['mismatchdate'][]=array($file_path,$photo_sets);
+				}
 
-			if ($info['fileformat']=='mp4'&&isset($info['tags']['quicktime']['gps_longitude'][0])) {
-				$file_longitude=(float)$info['tags']['quicktime']['gps_longitude'][0];
-			} elseif ($info['fileformat']=='jpg'&&isset($info['jpg']['exif']['GPS']['computed']['longitude'])) {
-				$file_longitude=(float)$info['jpg']['exif']['GPS']['computed']['longitude'];
-			} else {
-				$file_longitude="";
-			}
+				// Change file creation to match exif date taken
+				exec("SetFile -d '".date('m/d/Y H:i:s',$file_date)."' ".escapeshellarg($file_path));
 	
-			// Does exif geo not match Flickr geo
-			if (($file_latitude==""&&$flickr_latitude!=0)||($file_longitude==""&&$flickr_longitude!=0)||
-				($file_latitude!=""&&abs(($flickr_latitude-$file_latitude)/$file_latitude)>0.000001)||
-				($file_longitude!=""&&abs(($flickr_longitude-$file_longitude)/$file_longitude)>0.000001)) {
-				//  Check the number of sets this photo is include
-				$photo_sets=array();
-				$sets=$f->photos_getAllContexts($photo['id']);
-				if (count($sets['set'])>1) { foreach ( $sets['set'] as $s ) {
-					$photo_sets[]=$s['title']['_content'];
-				}}
-				//  Create code for deletion (log as bad geo)
-				$log['mismatchgeo'][]=array($file_path,$photo_sets);
+				// Change file modification to match exif date taken
+				touch($file_path,$file_date); // touch -t
+	
+				// Get exif geo
+				if ($info['fileformat']=='mp4'&&isset($info['tags']['quicktime']['gps_latitude'][0])) {
+					$file_latitude=(float)$info['tags']['quicktime']['gps_latitude'][0];
+				} elseif ($info['fileformat']=='jpg'&&isset($info['jpg']['exif']['GPS']['computed']['latitude'])) {
+					$file_latitude=(float)$info['jpg']['exif']['GPS']['computed']['latitude'];
+				} else {
+					$file_latitude="";
+				}
+
+				if ($info['fileformat']=='mp4'&&isset($info['tags']['quicktime']['gps_longitude'][0])) {
+					$file_longitude=(float)$info['tags']['quicktime']['gps_longitude'][0];
+				} elseif ($info['fileformat']=='jpg'&&isset($info['jpg']['exif']['GPS']['computed']['longitude'])) {
+					$file_longitude=(float)$info['jpg']['exif']['GPS']['computed']['longitude'];
+				} else {
+					$file_longitude="";
+				}
+	
+				// Does exif geo not match Flickr geo
+				if (($file_latitude==""&&$flickr_latitude!=0)||($file_longitude==""&&$flickr_longitude!=0)||
+					($file_latitude!=""&&abs(($flickr_latitude-$file_latitude)/$file_latitude)>0.000001)||
+					($file_longitude!=""&&abs(($flickr_longitude-$file_longitude)/$file_longitude)>0.000001)) {
+					//  Check the number of sets this photo is include
+					$photo_sets=array();
+					$sets=$f->photos_getAllContexts($photo['id']);
+					if (count($sets['set'])>1) { foreach ( $sets['set'] as $s ) {
+						$photo_sets[]=$s['title']['_content'];
+					}}
+					//  Create code for deletion (log as bad geo)
+					$log['mismatchgeo'][]=array($file_path,$photo_sets);
+				}
+				
 			}
 
 			// Save file path to files_in_flickr array
@@ -263,7 +273,7 @@ if (count($sets_in_flickr)!=(count($folders_in_base)-1)) {
 	$log['mismatchcount'][]=array("id"=>0,"desc"=>"*Folders - ".count($sets_in_flickr)." in flickr, ".count($folders_in_base)." in the base");
 }
 
-
+// print_r($log); // leave this line for debugging
 
 // Mail off the log
 $invalid="";$notfound="";$extraneous_folders="";$extraneous_files="";$mismatchdate="";$mismatchgeo="";$mismatchcount="";
@@ -271,7 +281,7 @@ if (count($log)) { foreach ($log as $code=>$l) {
 	if ($code=="invalid") { 
 		foreach ($l as $file) { $invalid.="rm ".escapeshellarg($file).";<br/>\n"; }
 	} else if ($code=="notfound") { 
-		foreach ($l as $file) { $notfound.="<a href='{$file[0]}'>Item in Flickr</a>: ".escapeshellarg($file[1]."/").";<br/>\n"; }
+		foreach ($l as $file) { $notfound.="<a href='{$file[0]}'>Item in Flickr</a>, should be: ".escapeshellarg($file[1]."/").";<br/>\n"; }
 	} else if ($code=="extraneous_folders") { 
 		foreach ($l as $file) { $extraneous_folders.="rm -r ".escapeshellarg($file."/").";<br/>\n"; }
 	} else if ($code=="extraneous_files") { 
