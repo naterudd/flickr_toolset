@@ -73,6 +73,7 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 			$flickr_filename=pathinfo($photo['url_o'],PATHINFO_BASENAME);
 			if ($photo['media']=="photo") {
 				$url_original=$photo['url_o'];
+				$headers = get_headers($url_original,1);
 			} else if ($photo['media']=="video") {
 				$sizes=$f->photos_getSizes($photo['id']);
 				foreach($sizes as $s) {
@@ -91,10 +92,7 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 					} 
 				}
 			}
-			if ($url_original=="") {
-				echo "Error no original found";
-			}
-		
+			
 			// Get flickr title
 			$flickr_title=$photo['title'];
 	
@@ -111,15 +109,23 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 			$file_name=$file_prename.".".$flickr_extension;
 			$file_path=$photo_download_base_path.$set_path.$file_name;
 	 
+	 		// Does the original exist online
+	 		$exists_online=true;
+			if ($url_original==""||intval(substr($headers[0], 9, 3)) >= 400) {
+				$exists_online=false;
+				$log['notfound'][]=array("https://www.flickr.com/photos/$my_nsid/{$photo['id']}",$file_path);
+				echo "Error no original found";
+			}
+		
 			// Does the photo not exist in the folder
-			$exists=false;
+			$exists_ondisk=false;
 			if (file_exists($file_path)) {
-				$exists=true;
+				$exists_ondisk=true;
 			}
 			if (key_exists($flickr_extension, $photo_download_acceptable_extension_replacements)) { if (count($photo_download_acceptable_extension_replacements[$flickr_extension])) {
 				foreach ($photo_download_acceptable_extension_replacements[$flickr_extension] as $acceptable_extension) {
 					if (file_exists($photo_download_base_path.$set_path.$file_prename.".".$acceptable_extension)) {
-						$exists=true;
+						$exists_ondisk=true;
 						$file_path=$photo_download_base_path.$set_path.$file_prename.".".$acceptable_extension;
 						$file_name=$file_prename.".".$acceptable_extension;
 					}				
@@ -128,7 +134,7 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 			echo "  ".$file_name."\n";
 
 			// If the file wasn't available
-			if ($exists===false) {
+			if ($exists_ondisk===false&&$exists_online) {
 				//  Download file
 				echo "    Need to download.\n";
 				
@@ -260,10 +266,12 @@ if (count($sets_in_flickr)!=(count($folders_in_base)-1)) {
 
 
 // Mail off the log
-$invalid="";$extraneous_folders="";$extraneous_files="";$mismatchdate="";$mismatchgeo="";$mismatchcount="";
+$invalid="";$notfound="";$extraneous_folders="";$extraneous_files="";$mismatchdate="";$mismatchgeo="";$mismatchcount="";
 if (count($log)) { foreach ($log as $code=>$l) {
 	if ($code=="invalid") { 
 		foreach ($l as $file) { $invalid.="rm ".escapeshellarg($file).";<br/>\n"; }
+	} else if ($code=="notfound") { 
+		foreach ($l as $file) { $notfound.="<a href='{$file[0]}'>Item in Flickr</a>: ".escapeshellarg($file[1]."/").";<br/>\n"; }
 	} else if ($code=="extraneous_folders") { 
 		foreach ($l as $file) { $extraneous_folders.="rm -r ".escapeshellarg($file."/").";<br/>\n"; }
 	} else if ($code=="extraneous_files") { 
@@ -296,6 +304,7 @@ if (count($log)) { foreach ($log as $code=>$l) {
 }}
 if ($invalid!=""||$extraneous_folders!=""||$extraneous_files!=""||$mismatchdate!=""||$mismatchgeo!=""||$mismatchcount!="") {
 	$body=($invalid!="")?"<br/><div style='color:#900;font-size:1.1em;font-weight:bold;'>Invalid</div>\n<div>$invalid</div>\n":"";
+	$body=($notfound!="")?"<br/><div style='color:#900;font-size:1.1em;font-weight:bold;'>Not Found</div>\n<div>$notfound</div>\n":"";
 	$body.=($extraneous_folders!="")?"<br/><div style='color:#900;font-size:1.1em;font-weight:bold;'>Extraneous Folders</div>\n<div>$extraneous_folders</div>\n":"";
 	$body.=($extraneous_files!="")?"<br/><div style='color:#900;font-size:1.1em;font-weight:bold;'>Extraneous Files</div>\n<div>$extraneous_files</div>\n":"";
 	$body.=($mismatchcount!="")?"<br/><div style='color:#900;font-size:1.1em;font-weight:bold;'>Mismatch Count</div>\n<div>$mismatchcount</div>\n":"";
