@@ -109,14 +109,6 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 			$file_name=$file_prename.".".$flickr_extension;
 			$file_path=$photo_download_base_path.$set_path.$file_name;
 	 
-	 		// Does the original exist online
-	 		$exists_online=true;
-			if ($url_original==""||intval(substr($headers[0], 9, 3)) >= 400) {
-				$exists_online=false;
-				$log['notfound'][]=array("https://www.flickr.com/photos/$my_nsid/{$photo['id']}",$file_path);
-				echo "Error no original found";
-			}
-		
 			// Does the photo not exist in the folder
 			$exists_ondisk=false;
 			if (file_exists($file_path)) {
@@ -133,6 +125,14 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 			}}
 			echo "  ".$file_name."\n";
 
+	 		// Does the original exist online
+	 		$exists_online=true;
+			if (($url_original==""||intval(substr($headers[0], 9, 3)) >= 400)&&$exists_ondisk===false) {
+				$exists_online=false;
+				$log['notfound'][]=array("https://www.flickr.com/photos/$my_nsid/{$photo['id']}",$file_path);
+				echo "Error no original found";
+			}
+		
 			// If the file wasn't available
 			if ($exists_ondisk===false&&$exists_online) {
 				//  Download file
