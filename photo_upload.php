@@ -153,7 +153,7 @@ foreach ($files as $file) {
 				echo " - Create set failed, should be: ".date('ym',$date);	
 			} else {
 				$set_id=$result['id'];
-				$all_sets['photoset'][]=array("id"=>$set_id,"title"=>date('ym',$date));
+				$all_sets['photoset'][]=array("id"=>$set_id,"title"=>array('_content'=>date('ym',$date)));
 			}
 		} else {
 			$result=$f->photosets_addPhoto($set_id,$id);
