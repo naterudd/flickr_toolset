@@ -144,8 +144,8 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 				echo "Error no original found";
 			}
 		
-			// If the file wasn't available
-			if ($exists_ondisk===false&&$exists_online) {
+			// If the file isn't on disk and identified the flickr file properly
+			if ($exists_ondisk===false&&$exists_online&&$flickr_extension!="missing") {
 				//  Download file
 				echo "    Need to download.\n";
 				
