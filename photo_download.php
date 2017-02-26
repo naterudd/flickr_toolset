@@ -94,10 +94,16 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 				}
 				$headers = get_headers($url_original,1);
 				if(isset($headers["Content-Disposition"])) {
-					if(preg_match('/.*filename=[\'\"]([^\'\"]+)/', $headers["Content-Disposition"], $matches)) { 
+					// apparently sometimes content-disposition can sometimes be an array
+					if (is_array($headers["Content-Disposition"])) { 
+						$content_header = $headers["Content-Disposition"][0];
+					} else {
+						$content_header = $headers["Content-Disposition"];
+					}
+					if(preg_match('/.*filename=[\'\"]([^\'\"]+)/', $content_header, $matches)) { 
 						// this catches filenames between Quotes
 						$flickr_filename = $matches[1];
-					} else if(preg_match("/.*filename=([^ ]+)/", $headers["Content-Disposition"], $matches)) { 
+					} else if(preg_match("/.*filename=([^ ]+)/", $content_header, $matches)) { 
 						// if filename is not quoted, we take all until the next space
 						$flickr_filename = $matches[1];
 					} 
