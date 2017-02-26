@@ -26,6 +26,16 @@ require_once("config.php");
 require_once("phpFlickr/phpFlickr.php");
 require_once("getid3/getid3.php");
 
+// if there are any arguments, save them into get
+if (isset($argv)) {
+	parse_str(implode("&",array_slice($argv,1)),$_GET);
+}
+
+// if there is a passed "search_expression" override the config variable
+if (isset($_GET['search_expression'])) {
+	$photo_download_search_expression = $_GET['search_expression'];
+}
+
 // Check the necessary regular expression pattern
 $result=@preg_match($photo_download_search_expression,"check");
 if ($result===false) {
