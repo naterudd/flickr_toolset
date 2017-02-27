@@ -144,7 +144,7 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 
 	 		// Does the original exist online
 	 		$exists_online=true;
-			if ((($flickr_extension!="missing")||($url_original==""||intval(substr($headers[0], 9, 3)) >= 400))&&$exists_ondisk===false) {
+			if ((($flickr_extension=="missing")||($url_original==""||intval(substr($headers[0], 9, 3)) >= 400))&&$exists_ondisk===false) {
 				$exists_online=false;
 				$log['notfound'][]=array("https://www.flickr.com/photos/$my_nsid/{$photo['id']}",$file_path);
 				echo "Error no original found";
