@@ -229,19 +229,18 @@ if ($success!=""||$failure!=""||$minor!=""||$unexpected_types!="") {
 }
 
 
-function readDirs($photo_upload_base_path){
-	global $log;
-	$acceptable_formats=array('jpg'=>1,'mp4'=>1,'png'=>1,'quicktime'=>1);
+function readDirs($path){
+	global $log, $photo_upload_acceptable_formats;
 	$return_array=array();
-	$dirHandle = opendir($photo_upload_base_path);
+	$dirHandle = opendir($path);
 	while($file = readdir($dirHandle)){
 		$getID3 = new getID3;
-		$info=$getID3->analyze($photo_upload_base_path."/".$file);
-		if(is_dir($photo_upload_base_path."/".$file) && $file!='.' && $file!='..' && $file!='completed'){
-			$return_array=array_merge_recursive($return_array, readDirs($photo_upload_base_path."/".$file));
+		$info=$getID3->analyze($path."/".$file);
+		if(is_dir($path."/".$file) && $file!='.' && $file!='..' && $file!='completed'){
+			$return_array=array_merge_recursive($return_array, readDirs($path."/".$file));
 		} else if (key_exists('fileformat', $info)) { 
-			if (key_exists($info['fileformat'],$acceptable_formats)) {
-				$return_array[]=$photo_upload_base_path."/".$file;
+			if (key_exists($info['fileformat'],$photo_upload_acceptable_formats)) {
+				$return_array[]=$path."/".$file;
 			} else {
 				if (count($log['unexpected_types'])) { if (!key_exists($info['fileformat'], $log['unexpected_types'])) {
 					$log['unexpected_types'][$info['fileformat']]=1;
