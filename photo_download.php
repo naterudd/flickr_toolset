@@ -121,7 +121,7 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 			$flickr_longitude=(float)$photo['longitude'];	
 	
 			// Make new file name
-			$flickr_extension=pathinfo($flickr_filename,PATHINFO_EXTENSION);
+			$flickr_extension=pathinfo($flickr_filename,PATHINFO_EXTENSION)==""?"missing":pathinfo($flickr_filename,PATHINFO_EXTENSION);
 			$file_prename=date("Ymd_His_",$flickr_date).$flickr_title;
 			$file_name=$file_prename.".".$flickr_extension;
 			$file_path=$photo_download_base_path.$set_path.$file_name;
@@ -140,14 +140,14 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 					}				
 				}
 			}}
-			echo "  ".$file_name."\n";
+			echo "  $file_name\n";
 
 	 		// Does the original exist online
 	 		$exists_online=true;
 			if ((($flickr_extension=="missing")||($url_original==""||intval(substr($headers[0], 9, 3)) >= 400))&&$exists_ondisk===false) {
 				$exists_online=false;
 				$log['notfound'][]=array("https://www.flickr.com/photos/$my_nsid/{$photo['id']}",$file_path);
-				echo "Error no original found";
+				echo "    Error no original found.\n";
 			}
 		
 			// If the file isn't on disk and identified the flickr file properly
@@ -199,7 +199,7 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 					$photo_sets=array();
 					$sets=$f->photos_getAllContexts($photo['id']);
 					if (count($sets['set'])>1) { foreach ( $sets['set'] as $s ) {
-						$photo_sets[]=$s['title']['_content'];
+						$photo_sets[]=$s['title'];
 					}}
 					//  Create code for deletion (log as bad date)				
 					$log['mismatchdate'][]=array($file_path,$photo_sets);
