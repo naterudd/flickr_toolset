@@ -36,6 +36,33 @@ $photo_download_email_to=str_replace("@", "+downloader@", $email_address); // or
 
 // MARK Photo upload settings
 $photo_upload_base_path="upload/photos/";
+$photo_upload_acceptable_formats=array('jpg'=>1,'mp4'=>1,'png'=>1,'quicktime'=>1);
 
 $photo_upload_email_from=str_replace("@", "+uploader@", $email_address); // or a specific address "uploader@doamin.com";
 $photo_upload_email_to=str_replace("@", "+uploader@", $email_address); // or a specific address "myaddress@doamin.com";, or the above variable $email_address;
+
+
+// MARK Video load settings
+$video_load_acceptable_extensions=array("mp4","mov","avi");
+$video_load_application="\"Google Chrome\"";
+$video_load_delay_between=180; // seconds between calls to flickr
+
+
+// MARK Video Scan settings
+$video_scan_base_path=$photo_download_base_path;
+$video_scan_search_expression=$photo_download_search_expression;
+
+
+// function push_notify($message) {
+// 	$event="flickr_toolset";
+// 	$key="your-ifttt-maker-key";
+// 	curl_setopt_array($ch = curl_init(), array(
+// 	  CURLOPT_URL => "https://maker.ifttt.com/trigger/$event/with/key/$key",
+// 	  CURLOPT_POSTFIELDS => array(
+// 		"value1" => "$message",
+// 	  ),
+// 	  CURLOPT_SAFE_UPLOAD => true,
+// 	));
+// 	curl_exec($ch);
+// 	curl_close($ch);
+// }
