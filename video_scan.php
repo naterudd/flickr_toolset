@@ -46,26 +46,25 @@ foreach ($all_sets['photoset'] as $set) {
 if (preg_match($video_scan_search_expression,$set['title']['_content'])) {
 	echo "Checking set: {$set['title']['_content']}\n";
 	if (is_dir($video_scan_base_path.$set['title']['_content'])) {
-		echo "\tChecking files\n";
 		$dirHandle = opendir($video_scan_base_path.$set['title']['_content']);
 		while($file = readdir($dirHandle)){
-			if(pathinfo($file,PATHINFO_EXTENSION)=="mp4"){
-				$files[$video_scan_base_path.$set['title']['_content']."/".$file]=1;
+			if(pathinfo($file,PATHINFO_EXTENSION)=="mp4"&&!in_array($set['title']['_content']."/".$file, $video_scan_ignorable)){
+				$files[$set['title']['_content']."/".$file]=1;
 			}
 		}
 	}
-	
-	// Remove items from the $files array if already downloaded another extension
-// 	foreach ($files as $title=>$file) {
-// 		$has_non_mp4=false;
-// 		foreach ($video_load_acceptable_extensions as $ext) {
-// 			if ($ext!="mp4"&&key_exists($ext, $file)) { $has_non_mp4=true; }
-// 		}
-// 		if ($has_non_mp4==false) {
-// 			unset($files[$title]);
-// 		}
-// 	}
-
-
 }}
-print_r($files);
+
+// Display files that were found in a way to easily add them to the igorne array
+if(count($files)) { 
+	echo "\$video_scan_ignorable=array(\n";
+	$first=true;
+	foreach ($files as $f=>$one) {
+		echo (!$first)?",\n":"";
+		$first=false;
+		echo "\t\"$f\"";
+	}
+	echo "\n);\n";
+} else {
+	echo "No mp4 files found.\n";
+}

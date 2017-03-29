@@ -51,7 +51,7 @@ $video_load_delay_between=180; // seconds between calls to flickr
 // MARK Video Scan settings
 $video_scan_base_path=$photo_download_base_path;
 $video_scan_search_expression=$photo_download_search_expression;
-
+$video_scan_ignorable=array();
 
 // function push_notify($message) {
 // 	$event="flickr_toolset";
