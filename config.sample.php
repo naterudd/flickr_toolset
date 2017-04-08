@@ -29,6 +29,9 @@ $photo_download_acceptable_extension_replacements=array(
 	"missing"=>array("mov","mp4","jpg"), //if for whatever reason you can't download from flickr, what extensions are acceptable so as not to throw an error
 	"mp4"=>array("mov") //a file on disk with an mov extension can stand in for a flickr file with an mp4 extension
 );
+$photo_download_acceptable_extraneous_files = array(
+//	"set name" => array($photo_download_base_path."set name/file name")
+);
 
 $photo_download_email_from=str_replace("@", "+downloader@", $email_address); // or a specific address "downloader@doamin.com";
 $photo_download_email_to=str_replace("@", "+downloader@", $email_address); // or a specific address "myaddress@doamin.com";, or the above variable $email_address;

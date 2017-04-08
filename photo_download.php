@@ -256,6 +256,11 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 	
 	} while ($page_increment<$photos['photoset']['pages']);	
 
+	
+	// Add in acceptable extra
+	if (is_array($photo_download_acceptable_extraneous_files[$set['title']['_content']])) {
+		$files_in_flickr=array_merge($files_in_flickr,$photo_download_acceptable_extraneous_files[$set['title']['_content']]);
+	}
 
 	// Check folder for extraneous files
 	$files_in_folder = glob($photo_download_base_path.$set_path.'*.*');
