@@ -257,7 +257,7 @@ if (preg_match($photo_download_search_expression,$set['title']['_content'])) {
 	} while ($page_increment<$photos['photoset']['pages']);	
 
 	
-	// Add in acceptable extra
+	// Add in acceptable extraneous files
 	if (is_array($photo_download_acceptable_extraneous_files[$set['title']['_content']])) {
 		$files_in_flickr=array_merge($files_in_flickr,$photo_download_acceptable_extraneous_files[$set['title']['_content']]);
 	}
